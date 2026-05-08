@@ -58,7 +58,7 @@
     }
     .card:hover .card-caption { opacity: 1; transform: translateY(0); }
 
-    /* ========== LIGHTBOX — COMPACT ========== */
+    /* ========== LIGHTBOX — FULLSCREEN PAS LAYAR ========== */
     .lightbox {
       position: fixed; inset: 0; z-index: 9999;
       display: flex; align-items: center; justify-content: center;
@@ -74,21 +74,20 @@
       cursor: pointer;
     }
 
-    /* Konten lightbox — compact column, centered */
+    /* Konten lightbox: Flex Column penuh layar */
     .lightbox-content {
       position: relative; z-index: 2;
       display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      width: 100%; height: 100%;
-      padding: 12px 16px;
-      gap: 10px;                                      /* ✅ spacing kecil antar elemen */
+      width: 100%; height: 100vh; /* Pastikan tinggi pas 1 viewport */
+      padding: 16px;
+      box-sizing: border-box;
     }
 
-    /* Close button — disatukan dalam flow (tidak absolute) */
+    /* Close button: Nempel rapih di atas kanan */
     .lightbox-top-bar {
       display: flex; justify-content: flex-end;
-      width: 100%; max-width: 900px;
-      flex-shrink: 0;
+      width: 100%; flex-shrink: 0;
+      margin-bottom: 12px;
     }
     .lightbox-close {
       width: 40px; height: 40px; border-radius: 50%;
@@ -99,24 +98,30 @@
     .lightbox-close:hover { background: rgba(0,0,0,0.18); transform: scale(1.1); }
     .lightbox-close svg { width:18px; height:18px; pointer-events:none; }
 
-    /* Area gambar — compact, tidak flex:1 */
+    /* Area gambar: Ambil semua sisa ruang di tengah */
     .lightbox-main {
       display: flex; align-items: center; justify-content: center;
-      width: 100%; flex-shrink: 1;
-      min-height: 0;                                    /* ✅ biarkan mengecil */
+      width: 100%; flex: 1; /* PENTING: Membuat area ini memenuhi sisa ruang layar */
+      min-height: 0; /* PENTING: Mencegah overflow flexbox */
       position: relative;
+      padding: 0 50px; /* Ruang untuk panah navigasi */
     }
 
+    /* Pembungkus gambar, menyesuaikan proporsi gambar */
     .image-wrapper {
-      position: relative; display: inline-block;
-      max-width: 70%;
-      max-height: 55vh;                                 /* ✅ tidak terlalu besar */
-      border-radius: 12px; overflow: visible;
+      position: relative; 
+      display: flex;
+      max-width: 100%;
+      max-height: 100%; /* Membatasi tinggi agar tidak keluar layar */
+      border-radius: 12px; 
     }
+    
     .image-wrapper img {
-      display: block; max-width: 100%;
-      max-height: 55vh;
-      object-fit: contain; border-radius: 12px;
+      display: block; 
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain; /* Gambar tidak akan terpotong & pas proporsi */
+      border-radius: 12px;
       box-shadow: 0 16px 40px rgba(0,0,0,0.2);
       transform: scale(0.92); opacity: 0;
       transition: transform 0.4s cubic-bezier(.25,.46,.45,.94), opacity 0.3s ease;
@@ -145,23 +150,11 @@
     .download-btn.loading svg { opacity: 0.4; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Caption — compact */
-    .lightbox-caption {
-      text-align: center; color: #333;
-      font-size: 14px; line-height: 1.4;
-      opacity: 0; transform: translateY(4px);
-      transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s;
-      max-width: 600px; flex-shrink: 0;
-      min-height: 0; padding: 0 16px;
-    }
-    .lightbox.active .lightbox-caption.visible { opacity: 1; transform: translateY(0); }
-    .lightbox-caption:empty { display: none; }
-
-    /* Panah — tetap absolute di area gambar */
+    /* Panah diletakkan di luar wrapper agar tidak menutupi gambar */
     .nav-arrow {
       position: absolute; top: 50%; transform: translateY(-50%);
       background: rgba(0,0,0,0.08); border: none;
-      width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+      width: 44px; height: 44px; border-radius: 50%; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: background 0.25s, transform 0.2s; z-index: 5; padding: 0;
     }
@@ -169,16 +162,28 @@
     .nav-arrow:active { transform: translateY(-50%) scale(0.94); }
     .nav-arrow.prev { left: 0; }
     .nav-arrow.next { right: 0; }
-    .nav-arrow svg { width:18px; height:18px; pointer-events:none; display:block; }
+    .nav-arrow svg { width:20px; height:20px; pointer-events:none; display:block; }
 
-    /* Thumbnails — compact */
+    /* Caption — Rapi di bawah gambar */
+    .lightbox-caption {
+      text-align: center; color: #333;
+      font-size: 14px; line-height: 1.4;
+      opacity: 0; transform: translateY(4px);
+      transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s;
+      width: 100%; flex-shrink: 0;
+      padding: 16px 16px 12px; /* Diberi jarak agar tidak mepet gambar/thumbnail */
+    }
+    .lightbox.active .lightbox-caption.visible { opacity: 1; transform: translateY(0); }
+    .lightbox-caption:empty { display: none; }
+
+    /* Thumbnails — Diberi jarak dan tidak mepet */
     .thumbnails-container {
-      width:100%; display:flex; justify-content:center;
-      flex-shrink: 0; padding: 0;
+      width: 100%; display: flex; justify-content: center;
+      flex-shrink: 0; padding-bottom: 12px;
     }
     .thumbnails {
-      display:flex; gap:8px; overflow-x:auto; scroll-behavior:smooth;
-      -webkit-overflow-scrolling:touch; padding:8px 14px;
+      display:flex; gap: 12px; /* Gap dilebarkan sedikit */ overflow-x:auto; scroll-behavior:smooth;
+      -webkit-overflow-scrolling:touch; padding: 10px 16px; /* Padding di dalam thumbnail ditambah */
       background: rgba(0,0,0,0.05); border-radius: 20px;
       backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
       max-width:95vw;
@@ -188,9 +193,9 @@
     .thumbnails::-webkit-scrollbar-track{background:transparent}
     .thumbnails::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.2);border-radius:10px}
     .thumb-item {
-      flex:0 0 auto; width:64px; height:64px;
-      border-radius: 6px; overflow:hidden;
-      border:2px solid transparent; cursor:pointer; opacity:0.6;
+      flex:0 0 auto; width: 68px; height: 68px; /* Ukuran dibesarkan sedikit agar proporsional */
+      border-radius: 8px; overflow:hidden;
+      border: 2px solid transparent; cursor:pointer; opacity:0.6;
       transition:opacity .25s,border-color .25s,transform .25s;
       background:#eaeaea;
     }
@@ -212,21 +217,22 @@
     @media (max-width: 640px) {
       .gallery-masonry { column-count: 1; }
       #gallery-root { padding: 16px 12px; }
-      .lightbox-content { padding: 8px 10px; gap: 6px; }
-      .image-wrapper { max-width: 94%; max-height: 45vh; }
-      .image-wrapper img { max-height: 45vh; }
-      .nav-arrow { width:34px; height:34px; }
-      .nav-arrow svg { width:16px; height:16px; }
-      .lightbox-close { width:34px; height:34px; }
+      .lightbox-content { padding: 12px; }
+      .lightbox-main { padding: 0 36px; } /* Jarak panah di HP */
+      .nav-arrow { width:36px; height:36px; }
+      .nav-arrow.prev { left: -6px; }
+      .nav-arrow.next { right: -6px; }
+      .nav-arrow svg { width:18px; height:18px; }
+      .lightbox-close { width:36px; height:36px; margin-bottom: 6px;}
       .lightbox-close svg { width:16px; height:16px; }
       .card-caption { font-size:11px; padding:28px 10px 10px; }
-      .lightbox-caption { font-size:12px; }
+      .lightbox-caption { font-size:12px; padding: 12px 10px 8px; }
       .download-btn { width:42px; height:42px; }
       .download-btn svg { width:20px; height:20px; }
       .card-download-btn { width:36px; height:36px; }
       .card-download-btn svg { width:16px; height:16px; }
-      .thumbnails { border-radius: 16px; padding:6px 10px; gap:6px; }
-      .thumb-item { width:52px; height:52px; border-radius: 5px; }
+      .thumbnails { border-radius: 16px; padding: 8px 12px; gap: 8px; }
+      .thumb-item { width:56px; height:56px; border-radius: 6px; }
     }
   </style>
 </head>
