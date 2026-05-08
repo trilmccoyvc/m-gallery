@@ -67,7 +67,7 @@
     }
     .lightbox.active { opacity: 1; visibility: visible; }
     .lightbox-bg {
-      position: absolute; inset: 0; background: rgba(0,0,0,0.97);
+      position: absolute; inset: 0; background: rgba(246,246,246,0.97);
       backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); cursor: pointer;
     }
     .lightbox-content {
@@ -77,7 +77,7 @@
     .lightbox-close {
       position: absolute; top: 22px; right: 28px; z-index: 10;
       width: 48px; height: 48px; border-radius: 50%;
-      background: rgba(255,255,255,0.12); border: none; cursor: pointer;
+      background: rgba(0,0,0,0.08); border: none; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: background 0.25s, transform 0.2s; padding: 0;
     }
@@ -114,7 +114,7 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .lightbox-caption {
-      text-align: center; color: #fff; padding: 12px 24px 4px; font-size: 15px; line-height: 1.5;
+      text-align: center; color: #333; padding: 12px 24px 4px; font-size: 15px; line-height: 1.5;
       opacity: 0; transform: translateY(6px);
       transition: opacity 0.35s ease 0.15s, transform 0.35s ease 0.15s;
       max-width: 600px; z-index: 3; position: relative;
@@ -139,7 +139,7 @@
     .thumbnails {
       display:flex; gap:10px; overflow-x:auto; scroll-behavior:smooth;
       -webkit-overflow-scrolling:touch; padding:10px 16px;
-      background:rgba(255,255,255,0.08); border-radius:40px;
+      background: rgba(0,0,0,0.06); border-radius:40px;
       backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
       max-width:95vw; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,0.35) transparent;
     }
@@ -187,13 +187,13 @@
     <div class="lightbox-bg" id="lightboxBg"></div>
     <div class="lightbox-content">
       <button class="lightbox-close" id="lightboxClose" aria-label="Close">
-        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </button>
       <div class="lightbox-main" id="lightboxMain">
         <button class="nav-arrow prev" id="prevBtn" aria-label="Previous">
-          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 4 7 12 15 20"/>
           </svg>
         </button>
@@ -201,7 +201,7 @@
           <img id="mainImage" src="" alt="" />
           <div class="download-overlay" id="downloadOverlay">
             <button class="download-btn" id="downloadBtn" aria-label="Download">
-              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                 <polyline points="7 10 12 15 17 10"/>
                 <line x1="12" y1="15" x2="12" y2="3"/>
@@ -210,7 +210,7 @@
           </div>
         </div>
         <button class="nav-arrow next" id="nextBtn" aria-label="Next">
-          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="9 4 17 12 9 20"/>
           </svg>
         </button>
@@ -294,7 +294,7 @@
 
         const dlOverlay = document.createElement('div'); dlOverlay.className = 'card-download-overlay';
         const dlBtn = document.createElement('button'); dlBtn.className = 'card-download-btn';
-        dlBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+        dlBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
         dlBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           dlBtn.classList.add('loading');
