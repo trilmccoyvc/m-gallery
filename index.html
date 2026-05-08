@@ -30,87 +30,90 @@
     .card-img-wrap img { width:100%; height:auto; display:block; background:#eaeaea; transition: transform 0.4s cubic-bezier(.25,.46,.45,.94); }
     .card:hover .card-img-wrap img { transform: scale(1.03); }
 
-    /* ========== LIGHTBOX ========== */
+    /* ========== LIGHTBOX - ANTI BOCOR / SCROLL LOCK ========== */
     .lightbox {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0; /* Mengunci tepat seukuran jendela browser */
-      width: 100vw;
-      height: 100vh;
-      z-index: 99999;
+      position: fixed !important; 
+      top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+      width: 100% !important; height: 100% !important;
+      z-index: 999999 !important;
       background: rgba(246,246,246,0.98);
       backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
       display: flex; flex-direction: column;
       opacity: 0; visibility: hidden;
       transition: opacity 0.3s ease, visibility 0.3s ease;
-      overflow: hidden; 
+      overflow: hidden !important; /* HARGA MATI: Tidak boleh ada scroll */
     }
     .lightbox.active { opacity: 1; visibility: visible; }
 
     .lightbox-content {
       display: flex; flex-direction: column;
       width: 100%; height: 100%;
+      position: relative;
     }
 
-    /* Header: Tombol Close */
+    /* --- HEADER (Download & Close) --- */
     .lightbox-header {
+      flex: 0 0 auto; /* Ukuran kaku, tidak akan membesar/mengecil */
+      height: 70px;
       display: flex; justify-content: flex-end; align-items: center;
-      padding: 16px; flex-shrink: 0; 
+      padding: 0 24px; gap: 12px;
+      position: relative; z-index: 20;
     }
-    .lightbox-close {
+    .header-btn {
       width: 44px; height: 44px; border-radius: 50%;
-      background: rgba(0,0,0,0.08); border: none; cursor: pointer;
+      background: rgba(0,0,0,0.06); border: none; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: background 0.2s, transform 0.2s;
     }
-    .lightbox-close:hover { background: rgba(0,0,0,0.18); transform: scale(1.1); }
-    .lightbox-close svg { width:20px; height:20px; }
+    .header-btn:hover { background: rgba(0,0,0,0.15); transform: scale(1.05); }
+    .header-btn svg { width: 20px; height: 20px; stroke: #333; }
 
-    /* Body: Area Gambar Utama */
+    /* --- BODY (Area Gambar & Panah) --- */
     .lightbox-body {
-      flex: 1; 
-      min-height: 0; /* Sangat penting agar flex child bisa mengecil */
-      display: flex; align-items: center; justify-content: space-between;
-      width: 100%; padding: 0 16px;
+      flex: 1 1 auto; /* Mengambil sisa ruang layar */
+      position: relative; /* KUNCI: Menjadi batas absolute untuk gambar */
+      width: 100%;
     }
     
-    .nav-arrow {
-      background: rgba(0,0,0,0.08); border: none;
-      width: 48px; height: 48px; border-radius: 50%; cursor: pointer;
+    /* WADAH ABSOLUT (Menghentikan gambar merusak layout) */
+    .image-absolute-container {
+      position: absolute; /* Gambar tidak bisa lagi mendorong tinggi layar */
+      top: 0; left: 0; right: 0; bottom: 0;
       display: flex; align-items: center; justify-content: center;
-      transition: background 0.2s; flex-shrink: 0; z-index: 10;
-    }
-    .nav-arrow:hover { background: rgba(0,0,0,0.2); }
-    .nav-arrow svg { width: 22px; height: 22px; }
-
-    .image-container {
-      flex: 1; 
-      height: 100%; min-height: 0; 
-      display: flex; align-items: center; justify-content: center;
-      padding: 0 24px; position: relative;
-    }
-    
-    .image-inner-wrapper {
-      position: relative; 
-      display: flex; justify-content: center; align-items: center;
-      max-width: 100%; max-height: 100%; /* Memastikan wrapper tidak melampaui container */
+      padding: 0 80px; /* Jarak kiri-kanan agar tidak nabrak panah */
     }
 
-    .image-inner-wrapper img {
+    .image-absolute-container img {
       max-width: 100%; 
       max-height: 100%; 
-      object-fit: contain; /* Memastikan seluruh gambar terlihat tanpa terpotong */
+      object-fit: contain; /* Dijamin utuh, tidak terpotong (clip) */
       display: block;
       border-radius: 8px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
       opacity: 0; transform: scale(0.95);
       transition: opacity 0.3s ease, transform 0.3s ease;
     }
-    .image-inner-wrapper img.loaded { opacity: 1; transform: scale(1); }
+    .image-absolute-container img.loaded { opacity: 1; transform: scale(1); }
 
+    /* PANAH NAVIGASI */
+    .nav-arrow {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 50px; height: 50px; border-radius: 50%;
+      background: rgba(0,0,0,0.06); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s; z-index: 10;
+    }
+    .nav-arrow:hover { background: rgba(0,0,0,0.15); }
+    .nav-arrow svg { width: 24px; height: 24px; stroke: #333; }
+    .nav-arrow.prev { left: 16px; }
+    .nav-arrow.next { right: 16px; }
+
+    /* LOADER & ERROR */
     .loading-spinner {
       position: absolute; width: 40px; height: 40px;
       border: 4px solid rgba(0,0,0,0.1); border-top-color: #333;
       border-radius: 50%; animation: spin 0.8s linear infinite; display: none;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
     }
     .loading-spinner.active { display: block; }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -118,49 +121,37 @@
     .error-text {
       position: absolute; color: #d32f2f; font-size: 14px;
       background: #ffebee; padding: 8px 16px; border-radius: 8px; display: none;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
     }
     .error-text.active { display: block; }
 
-    .download-overlay {
-      position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-      background: rgba(0,0,0,0.4); border-radius: 8px;
-      opacity: 0; transition: opacity 0.2s ease; cursor: pointer;
-    }
-    .image-inner-wrapper:hover .download-overlay { opacity: 1; }
-    .download-btn {
-      width: 52px; height: 52px; border-radius: 50%;
-      background: rgba(255,255,255,0.3); backdrop-filter: blur(4px);
-      border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
-    }
-    .download-btn:hover { background: rgba(255,255,255,0.6); transform: scale(1.1); transition: 0.2s; }
-    .download-btn svg { width: 26px; height: 26px; stroke: white; }
-
-    /* Footer: Caption & Thumbnails */
+    /* --- FOOTER (Caption & Thumbnails) --- */
     .lightbox-footer {
-      flex-shrink: 0; 
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      flex: 0 0 auto; /* Ukuran kaku */
+      display: flex; flex-direction: column; align-items: center;
       width: 100%; 
-      padding: 24px 16px 32px 16px; 
-      gap: 20px; /* Jarak yang luas antara caption dan thumbnail */
+      padding: 16px 24px 32px 24px; /* Jarak bawah lega */
+      gap: 16px; /* Jarak lapang antara teks dan thumbnail */
+      position: relative; z-index: 20;
     }
+    
     .lightbox-caption {
-      text-align: center; color: #444; font-size: 15px; font-weight: 500;
+      text-align: center; color: #333; font-size: 15px; font-weight: 500;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90%;
     }
     .lightbox-caption:empty { display: none; }
 
     .thumbnails-wrap {
       width: 100%; max-width: 100%;
-      display: flex; gap: 10px; overflow-x: auto; scroll-behavior: smooth;
-      padding: 12px; background: rgba(0,0,0,0.06); border-radius: 12px;
+      display: flex; gap: 12px; overflow-x: auto; scroll-behavior: smooth;
+      padding: 12px 16px; background: rgba(0,0,0,0.05); border-radius: 12px;
       -webkit-overflow-scrolling: touch; scrollbar-width: none;
     }
     .thumbnails-wrap::-webkit-scrollbar { display: none; }
     
     .thumb-item {
       flex: 0 0 auto; width: 64px; height: 64px;
-      border-radius: 6px; overflow: hidden;
+      border-radius: 8px; overflow: hidden;
       cursor: pointer; opacity: 0.5; border: 2px solid transparent;
       transition: 0.2s ease; background: #ddd;
     }
@@ -168,18 +159,18 @@
     .thumb-item.active { opacity: 1; border-color: #333; transform: scale(1.05); }
     .thumb-item:hover { opacity: 0.9; }
 
-    /* ===== RESPONSIVE ===== */
+    /* ===== RESPONSIVE UNTUK HP ===== */
     @media (max-width: 1024px) { .gallery-masonry { column-count: 2; } }
     @media (max-width: 640px) {
       .gallery-masonry { column-count: 1; }
-      .lightbox-header { padding: 12px; }
-      .lightbox-body { padding: 0 8px; }
-      .image-container { padding: 0 12px; }
+      .lightbox-header { height: 60px; padding: 0 16px; }
+      .image-absolute-container { padding: 0 10px; } /* Lebarkan gambar di HP */
       .nav-arrow { width: 40px; height: 40px; }
-      .nav-arrow svg { width: 18px; height: 18px; }
-      .lightbox-footer { padding: 16px 12px 24px 12px; gap: 16px; }
-      .thumb-item { width: 52px; height: 52px; }
-      .lightbox-caption { font-size: 13px; }
+      .nav-arrow.prev { left: 4px; }
+      .nav-arrow.next { right: 4px; }
+      .lightbox-footer { padding: 12px 16px 24px 16px; }
+      .thumb-item { width: 56px; height: 56px; }
+      .lightbox-caption { font-size: 14px; }
     }
   </style>
 </head>
@@ -189,42 +180,43 @@
     <div class="gallery-masonry" id="masonryGrid"></div>
   </div>
 
+  <!-- LIGHTBOX -->
   <div class="lightbox" id="lightbox">
     <div class="lightbox-content">
+      
+      <!-- HEADER -->
       <div class="lightbox-header">
-        <button class="lightbox-close" id="lightboxClose" aria-label="Close">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <button class="header-btn" id="downloadBtn" aria-label="Download">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+        <button class="header-btn" id="lightboxClose" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
 
+      <!-- BODY -->
       <div class="lightbox-body">
         <button class="nav-arrow prev" id="prevBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 4 7 12 15 20"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 4 7 12 15 20"/></svg>
         </button>
         
-        <div class="image-container">
+        <div class="image-absolute-container" id="imageWrapper">
           <div class="loading-spinner" id="loadingSpinner"></div>
           <div class="error-text" id="errorText">Gagal memuat gambar.</div>
-          
-          <div class="image-inner-wrapper" id="imageWrapper">
-            <img id="mainImage" src="" alt="" />
-            <div class="download-overlay" id="downloadOverlay">
-              <button class="download-btn" id="downloadBtn">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              </button>
-            </div>
-          </div>
+          <img id="mainImage" src="" alt="" />
         </div>
 
         <button class="nav-arrow next" id="nextBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 4 17 12 9 20"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 4 17 12 9 20"/></svg>
         </button>
       </div>
 
+      <!-- FOOTER -->
       <div class="lightbox-footer">
         <div class="lightbox-caption" id="lightboxCaption"></div>
         <div class="thumbnails-wrap" id="thumbnailsStrip"></div>
       </div>
+
     </div>
   </div>
 
@@ -242,7 +234,7 @@
     const errorTxt      = document.getElementById('errorText');
     const dlBtn         = document.getElementById('downloadBtn');
 
-    // Pindahkan lightbox ke akar body untuk memastikan posisinya stabil di viewport browser
+    // Menghindari konflik parent CSS dengan memindahkan lightbox ke root body
     document.body.appendChild(lightbox);
 
     let items = [];
@@ -312,7 +304,7 @@
 
     function openLightbox(index) {
       lightbox.classList.add('active');
-      document.body.style.overflow = 'hidden'; 
+      document.body.style.overflow = 'hidden'; // Mengunci scroll body belakang
       loadLightboxImage(index);
     }
 
@@ -322,6 +314,7 @@
       mainImage.src = '';
     }
 
+    // Navigasi
     document.getElementById('prevBtn').addEventListener('click', () => {
       if(!items.length) return;
       loadLightboxImage((currentIndex - 1 + items.length) % items.length);
@@ -332,12 +325,14 @@
     });
     document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
     
+    // Klik area kosong untuk menutup
     document.getElementById('lightbox').addEventListener('click', (e) => {
-      if(e.target === lightbox || e.target.classList.contains('lightbox-body') || e.target.classList.contains('image-container')) {
+      if(e.target === lightbox || e.target.classList.contains('lightbox-body') || e.target.classList.contains('image-absolute-container')) {
         closeLightbox();
       }
     });
 
+    // Keyboard support
     document.addEventListener('keydown', (e) => {
       if (!lightbox.classList.contains('active')) return;
       if (e.key === 'Escape') closeLightbox();
@@ -345,6 +340,7 @@
       if (e.key === 'ArrowRight') document.getElementById('nextBtn').click();
     });
 
+    // Download Button Action
     dlBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       const url = items[currentIndex].url;
@@ -354,6 +350,7 @@
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
     });
 
+    // Fetch JSON Data
     fetch(DATA_URL)
       .then(res => {
         if (!res.ok) throw new Error('Data not found');
