@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gallery</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#f5f5f5;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+
+    #gallery-root {
+      --gap: 14px; --border-size: 2px; --border-color: #ffffff; --radius: 14px;
+      --shadow: 0 4px 12px rgba(0,0,0,0.08);
+      --hover-shadow: 0 16px 32px rgba(0,0,0,0.22);
+      max-width: 1400px; margin: 0 auto; padding: 24px 18px;
+    }
+
+    .gallery-masonry { column-count: 3; column-gap: var(--gap); }
+
+    .card {
+      break-inside: avoid; margin-bottom: var(--gap);
+      border-radius: var(--radius); border: var(--border-size) solid var(--border-color);
+      background: #eaeaea; box-shadow: var(--shadow);
+      transition: transform 0.3s cubic-bezier(.25,.46,.45,.94), box-shadow 0.3s ease;
+      cursor: pointer; overflow: hidden; line-height: 0; position: relative;
+    }
+    .card:hover { transform: translateY(-6px); box-shadow: var(--hover-shadow); border-color:#eee; }
+    .card-img-wrap { position: relative; display: block; border-radius: calc(var(--radius) - 2px); overflow: hidden; }
+    .card-img-wrap img { width:100%; height:auto; display:block; background:#eaeaea; transition: transform 0.4s cubic-bezier(.25,.46,.45,.94); }
+    .card:hover .card-img-wrap img { transform: scale(1.03); }
+
+    .card-download-overlay {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.45); opacity: 0; transition: opacity 0.25s ease;
+    }
+    .card:hover .card-download-overlay { opacity: 1; }
+
+    .card-download-btn {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(255,255,255,0.25); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.25s, transform 0.2s; padding: 0;
+    }
+    .card-download-btn:hover { background: rgba(255,255,255,0.5); transform: scale(1.12); }
+    .card-download-btn:active { transform: scale(0.9); }
+    .card-download-btn svg { width: 20px; height: 20px; pointer-events: none; }
+    .card-download-btn.loading { pointer-events: none; animation: spin 0.8s linear infinite; }
+    .card-download-btn.loading svg { opacity: 0.4; }
+
+    .card-caption {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.75));
+      color: #fff; padding: 36px 14px 14px; font-size: 13px; line-height: 1.4;
+      opacity: 0; transform: translateY(8px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 1;
+    }
+    .card:hover .card-caption { opacity: 1; transform: translateY(0); }
+
+    /* Lightbox */
+    .lightbox {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden; transition: opacity 0.35s ease, visibility 0.35s ease;
+    }
+    .lightbox.active { opacity: 1; visibility: visible; }
+    .lightbox-bg {
+      position: absolute; inset: 0; background: rgba(0,0,0,0.97);
+      backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); cursor: pointer;
+    }
+    .lightbox-content {
+      position: relative; z-index: 2; display: flex; flex-direction: column;
+      align-items: center; width: 100%; height: 100%;
+    }
+    .lightbox-close {
+      position: absolute; top: 22px; right: 28px; z-index: 10;
+      width: 48px; height: 48px; border-radius: 50%;
+      background: rgba(255,255,255,0.12); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.25s, transform 0.2s; padding: 0;
+    }
+    .lightbox-close:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
+    .lightbox-close svg { width:20px; height:20px; pointer-events:none; }
+
+    .lightbox-main { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; padding: 16px 16px 4px; position: relative; }
+    .image-wrapper { position: relative; display: inline-block; max-width: 92%; max-height: 72vh; border-radius: 12px; overflow: visible; }
+    .image-wrapper img {
+      display: block; max-width: 100%; max-height: 72vh; object-fit: contain;
+      border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+      transform: scale(0.92); opacity: 0;
+      transition: transform 0.4s cubic-bezier(.25,.46,.45,.94), opacity 0.3s ease;
+    }
+    .lightbox.active .image-wrapper img.visible { transform: scale(1); opacity: 1; }
+
+    .download-overlay {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.45); border-radius: 12px;
+      opacity: 0; transition: opacity 0.25s ease; cursor: pointer;
+    }
+    .image-wrapper:hover .download-overlay { opacity: 1; }
+    .download-btn {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: rgba(255,255,255,0.25); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.25s, transform 0.2s; padding: 0;
+    }
+    .download-btn:hover { background: rgba(255,255,255,0.45); transform: scale(1.12); }
+    .download-btn:active { transform: scale(0.92); }
+    .download-btn svg { width: 26px; height: 26px; pointer-events: none; }
+    .download-btn.loading { pointer-events: none; animation: spin 0.8s linear infinite; }
+    .download-btn.loading svg { opacity: 0.4; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .lightbox-caption {
+      text-align: center; color: #fff; padding: 12px 24px 4px; font-size: 15px; line-height: 1.5;
+      opacity: 0; transform: translateY(6px);
+      transition: opacity 0.35s ease 0.15s, transform 0.35s ease 0.15s;
+      max-width: 600px; z-index: 3; position: relative;
+    }
+    .lightbox.active .lightbox-caption.visible { opacity: 1; transform: translateY(0); }
+    .lightbox-caption:empty { display: none; }
+
+    .nav-arrow {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      background: rgba(255,255,255,0.18); border: none;
+      width: 46px; height: 46px; border-radius: 50%; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.25s, transform 0.2s; z-index: 5; padding: 0;
+    }
+    .nav-arrow:hover { background: rgba(255,255,255,0.4); }
+    .nav-arrow:active { transform: translateY(-50%) scale(0.94); }
+    .nav-arrow.prev { left: 18px; }
+    .nav-arrow.next { right: 18px; }
+    .nav-arrow svg { width:20px; height:20px; pointer-events:none; display:block; }
+
+    .thumbnails-container { width:100%; display:flex; justify-content:center; margin:10px 0 20px; padding:0 16px; }
+    .thumbnails {
+      display:flex; gap:10px; overflow-x:auto; scroll-behavior:smooth;
+      -webkit-overflow-scrolling:touch; padding:10px 16px;
+      background:rgba(255,255,255,0.08); border-radius:40px;
+      backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+      max-width:95vw; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,0.35) transparent;
+    }
+    .thumbnails::-webkit-scrollbar{height:5px}
+    .thumbnails::-webkit-scrollbar-track{background:transparent}
+    .thumbnails::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.5);border-radius:20px}
+    .thumb-item {
+      flex:0 0 auto; width:80px; height:80px; border-radius:10px; overflow:hidden;
+      border:2px solid transparent; cursor:pointer; opacity:0.6;
+      transition:opacity .25s,border-color .25s,transform .25s; background:#eaeaea;
+    }
+    .thumb-item.active{opacity:1;border-color:#fff;transform:scale(1.12);box-shadow:0 0 14px rgba(255,255,255,0.35)}
+    .thumb-item:hover{opacity:.85;transform:scale(1.05)}
+    .thumb-item.active:hover{transform:scale(1.12)}
+    .thumb-item img{width:100%;height:100%;object-fit:cover}
+
+    /* Loading / error */
+    .gallery-status {
+      text-align: center; padding: 60px 20px; color: #888; font-size: 15px;
+    }
+    .gallery-status.error { color: #c0392b; }
+
+    @media (max-width: 1024px) { .gallery-masonry { column-count: 2; } }
+    @media (max-width: 640px) {
+      .gallery-masonry { column-count: 1; }
+      #gallery-root { padding: 16px 12px; }
+      .nav-arrow { width:38px; height:38px; }
+      .nav-arrow.prev { left:8px; } .nav-arrow.next { right:8px; }
+      .lightbox-close { top:14px; right:16px; width:40px; height:40px; }
+      .card-caption { font-size:11px; padding:28px 10px 10px; }
+      .lightbox-caption { font-size:13px; padding:8px 16px 2px; }
+      .download-btn { width:48px; height:48px; }
+      .download-btn svg { width:22px; height:22px; }
+      .card-download-btn { width:36px; height:36px; }
+      .card-download-btn svg { width:16px; height:16px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="gallery-root">
+    <div class="gallery-status" id="galleryStatus">Loading gallery…</div>
+    <div class="gallery-masonry" id="masonryGrid"></div>
+  </div>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <div class="lightbox-bg" id="lightboxBg"></div>
+    <div class="lightbox-content">
+      <button class="lightbox-close" id="lightboxClose" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <div class="lightbox-main" id="lightboxMain">
+        <button class="nav-arrow prev" id="prevBtn" aria-label="Previous">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 4 7 12 15 20"/>
+          </svg>
+        </button>
+        <div class="image-wrapper" id="imageWrapper">
+          <img id="mainImage" src="" alt="" />
+          <div class="download-overlay" id="downloadOverlay">
+            <button class="download-btn" id="downloadBtn" aria-label="Download">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <button class="nav-arrow next" id="nextBtn" aria-label="Next">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 4 17 12 9 20"/>
+          </svg>
+        </button>
+      </div>
+      <div class="lightbox-caption" id="lightboxCaption"></div>
+      <div class="thumbnails-container">
+        <div class="thumbnails" id="thumbnailsStrip"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    const DATA_URL = './gallery-data.json';   // ✅ fetch dari file JSON di repo yang sama
+
+    const masonryGrid   = document.getElementById('masonryGrid');
+    const statusEl      = document.getElementById('galleryStatus');
+    const lightbox      = document.getElementById('lightbox');
+    const lightboxBg    = document.getElementById('lightboxBg');
+    const mainImage     = document.getElementById('mainImage');
+    const captionEl     = document.getElementById('lightboxCaption');
+    const thumbStrip    = document.getElementById('thumbnailsStrip');
+    const closeBtn      = document.getElementById('lightboxClose');
+    const downloadBtn   = document.getElementById('downloadBtn');
+    const downloadOverlay = document.getElementById('downloadOverlay');
+    const prevBtn       = document.getElementById('prevBtn');
+    const nextBtn       = document.getElementById('nextBtn');
+
+    let items = [];
+    let currentIndex = 0;
+    let activePreloader = null;
+    let touchStartX = 0;
+
+    // ========== HELPERS ==========
+    function downloadFile(url) {
+      const filename = url.split('/').pop().split('?')[0] || 'image.jpg';
+      fetch(url)
+        .then(r => { if(!r.ok) throw new Error(); return r.blob(); })
+        .then(blob => {
+          const u = URL.createObjectURL(blob);
+          const a = document.createElement('a'); a.href = u; a.download = filename;
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          URL.revokeObjectURL(u);
+        })
+        .catch(() => window.open(url, '_blank'));
+    }
+
+    // ========== BUILD ==========
+    function buildMasonry() {
+      masonryGrid.innerHTML = '';
+      items.forEach((item, i) => {
+        const card = document.createElement('div'); card.className = 'card';
+        const imgWrap = document.createElement('div'); imgWrap.className = 'card-img-wrap';
+        const img = document.createElement('img');
+        img.src = item.url; img.loading = 'lazy'; img.decoding = 'async'; img.alt = item.caption || `Image ${i+1}`;
+        imgWrap.appendChild(img);
+
+        // Download
+        const dlOverlay = document.createElement('div'); dlOverlay.className = 'card-download-overlay';
+        const dlBtn = document.createElement('button'); dlBtn.className = 'card-download-btn';
+        dlBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+        dlBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dlBtn.classList.add('loading');
+          downloadFile(item.url);
+          setTimeout(() => dlBtn.classList.remove('loading'), 2000);
+        });
+        dlOverlay.appendChild(dlBtn);
+        imgWrap.appendChild(dlOverlay);
+        card.appendChild(imgWrap);
+
+        if (item.caption) {
+          const cap = document.createElement('div'); cap.className = 'card-caption'; cap.textContent = item.caption;
+          card.appendChild(cap);
+        }
+        card.addEventListener('click', () => openLightbox(i));
+        masonryGrid.appendChild(card);
+      });
+    }
+
+    function buildThumbnails() {
+      thumbStrip.innerHTML = '';
+      items.forEach((item, i) => {
+        const t = document.createElement('div'); t.className = 'thumb-item'; t.dataset.index = i;
+        const img = document.createElement('img');
+        img.src = item.url; img.loading = 'lazy'; img.decoding = 'async'; img.alt = `Thumb ${i+1}`;
+        t.appendChild(img);
+        t.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (currentIndex !== i) { currentIndex = i; switchToImage(); }
+        });
+        thumbStrip.appendChild(t);
+      });
+    }
+
+    // ========== LIGHTBOX ==========
+    function openLightbox(index) {
+      if (activePreloader) { activePreloader.onload = null; activePreloader.onerror = null; activePreloader = null; }
+      currentIndex = index;
+      mainImage.classList.remove('visible');
+      captionEl.classList.remove('visible');
+      captionEl.textContent = items[currentIndex].caption || '';
+
+      const targetUrl = items[currentIndex].url;
+      const preloader = new Image();
+      activePreloader = preloader;
+
+      preloader.onload = function() {
+        if (activePreloader !== preloader) return;
+        activePreloader = null;
+        mainImage.src = targetUrl;
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            mainImage.classList.add('visible');
+            captionEl.classList.add('visible');
+            updateThumbHighlight();
+          });
+        });
+      };
+      preloader.onerror = function() {
+        if (activePreloader !== preloader) return;
+        activePreloader = null;
+        mainImage.src = targetUrl;
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            mainImage.classList.add('visible');
+            captionEl.classList.add('visible');
+            updateThumbHighlight();
+          });
+        });
+      };
+      preloader.src = targetUrl;
+
+      lightbox.classList.add('active');
+      lightbox.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+      if (activePreloader) { activePreloader.onload = null; activePreloader.onerror = null; activePreloader = null; }
+      mainImage.classList.remove('visible');
+      captionEl.classList.remove('visible');
+      setTimeout(() => {
+        lightbox.classList.remove('active');
+        lightbox.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+      }, 200);
+    }
+
+    function switchToImage() {
+      if (activePreloader) { activePreloader.onload = null; activePreloader.onerror = null; activePreloader = null; }
+      const targetUrl = items[currentIndex].url;
+
+      if (mainImage.src === targetUrl && mainImage.classList.contains('visible')) {
+        captionEl.textContent = items[currentIndex].caption || '';
+        captionEl.classList.add('visible');
+        updateThumbHighlight();
+        return;
+      }
+      mainImage.classList.remove('visible');
+      captionEl.classList.remove('visible');
+
+      const preloader = new Image();
+      activePreloader = preloader;
+      preloader.onload = function() {
+        if (activePreloader !== preloader) return;
+        activePreloader = null;
+        mainImage.src = targetUrl;
+        captionEl.textContent = items[currentIndex].caption || '';
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            mainImage.classList.add('visible');
+            captionEl.classList.add('visible');
+            updateThumbHighlight();
+          });
+        });
+      };
+      preloader.onerror = function() {
+        if (activePreloader !== preloader) return;
+        activePreloader = null;
+        mainImage.src = targetUrl;
+        captionEl.textContent = items[currentIndex].caption || '';
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            mainImage.classList.add('visible');
+            captionEl.classList.add('visible');
+            updateThumbHighlight();
+          });
+        });
+      };
+      preloader.src = targetUrl;
+    }
+
+    function updateThumbHighlight() {
+      const thumbs = thumbStrip.querySelectorAll('.thumb-item');
+      thumbs.forEach((t, i) => t.classList.toggle('active', i === currentIndex));
+      const activeThumb = thumbStrip.querySelector(`.thumb-item[data-index="${currentIndex}"]`);
+      if (activeThumb) activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+
+    function showPrev() { if (!items.length) return; currentIndex = (currentIndex - 1 + items.length) % items.length; switchToImage(); }
+    function showNext() { if (!items.length) return; currentIndex = (currentIndex + 1) % items.length; switchToImage(); }
+
+    function downloadFullscreen(e) {
+      e.stopPropagation();
+      downloadBtn.classList.add('loading');
+      downloadFile(items[currentIndex].url);
+      setTimeout(() => downloadBtn.classList.remove('loading'), 2000);
+    }
+
+    function onKeyDown(e) {
+      if (!lightbox.classList.contains('active')) return;
+      if (e.key === 'Escape') closeLightbox();
+      else if (e.key === 'ArrowLeft') showPrev();
+      else if (e.key === 'ArrowRight') showNext();
+    }
+
+    // Events
+    const mainArea = document.getElementById('lightboxMain');
+    mainArea.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+    mainArea.addEventListener('touchend', (e) => {
+      const diff = touchStartX - e.changedTouches[0].screenX;
+      if (Math.abs(diff) > 45) { if (diff > 0) showNext(); else showPrev(); }
+    });
+
+    lightboxBg.addEventListener('click', (e) => { e.stopPropagation(); closeLightbox(); });
+    closeBtn.addEventListener('click', (e) => { e.stopPropagation(); closeLightbox(); });
+    downloadBtn.addEventListener('click', downloadFullscreen);
+    downloadOverlay.addEventListener('click', (e) => { e.stopPropagation(); });
+    prevBtn.addEventListener('click', (e) => { e.stopPropagation(); showPrev(); });
+    nextBtn.addEventListener('click', (e) => { e.stopPropagation(); showNext(); });
+    document.addEventListener('keydown', onKeyDown);
+
+    // ========== FETCH DATA & INIT ==========
+    fetch(DATA_URL)
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then(data => {
+        if (!Array.isArray(data) || data.length === 0) throw new Error('Empty data');
+        // Normalisasi
+        items = data.map(item => typeof item === 'string' ? { url: item, caption: '' } : item);
+        statusEl.style.display = 'none';
+        buildMasonry();
+        buildThumbnails();
+      })
+      .catch(err => {
+        statusEl.textContent = '⚠️ Gagal memuat galeri. Pastikan file gallery-data.json tersedia dan formatnya benar.';
+        statusEl.classList.add('error');
+        console.error('Gallery fetch error:', err);
+      });
+  })();
+  </script>
+</body>
+</html>
